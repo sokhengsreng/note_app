@@ -79,12 +79,12 @@ Frontend dev server usually runs on:
 
 Frontend API target should be:
 
-- `VITE_API_URL=http://localhost:5207/api`
+- `VITE_API_URL=/api` (default in `.env.example`)
 
 ### 3) Tests
 
 ```bash
-cd NotesApplication
+cd NotesApplication.Tests
 dotnet test
 ```
 
