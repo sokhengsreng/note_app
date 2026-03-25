@@ -159,6 +159,21 @@ public class NoteServiceTests
     }
 
     [Fact]
+    public async Task EmptyTrashAsync_ShouldDeleteAllTrashedAndReturnCount()
+    {
+        var userId = 1;
+        _mockNoteRepository.Setup(r => r.DeleteAllTrashedForUserAsync(userId))
+            .ReturnsAsync(3);
+
+        var result = await _noteService.EmptyTrashAsync(userId);
+
+        Assert.True(result.Success);
+        Assert.Equal(3, result.Data);
+        Assert.Contains("3", result.Message);
+        _mockNoteRepository.Verify(r => r.DeleteAllTrashedForUserAsync(userId), Times.Once);
+    }
+
+    [Fact]
     public async Task GetUserNotesAsync_WithValidQuery_ShouldReturnPaginatedNotes()
     {
         // Arrange

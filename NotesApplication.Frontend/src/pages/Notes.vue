@@ -572,6 +572,16 @@
         </div>
       </div>
     </div>
+
+    <ConfirmModal
+      v-model="emptyTrashModalOpen"
+      title="Empty Trash"
+      message="Permanently delete all items in Trash? This cannot be undone."
+      confirm-label="Delete all"
+      cancel-label="Cancel"
+      title-id="empty-trash-modal-header"
+      @confirm="confirmEmptyTrash"
+    />
   </div>
 </template>
 
@@ -579,10 +589,12 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router"; // Added useRouter
 import { useNotesStore } from "../stores/notesStore";
+import ConfirmModal from "../components/ConfirmModal.vue";
 
 const route = useRoute();
 const router = useRouter(); // Initialized useRouter
 const notesStore = useNotesStore();
+const emptyTrashModalOpen = ref(false);
 const searchQuery = ref("");
 const swipeOffsetById = ref<Record<number, number>>({});
 const activeSwipe = ref<{ id: number; startX: number; startY: number } | null>(
@@ -993,24 +1005,16 @@ const handleDeletePermanently = async (id: number) => {
   }
 };
 
-const handleEmptyTrash = async () => {
+const handleEmptyTrash = () => {
   if (!isTrashView.value) return;
   if (notesStore.isLoading) return;
   if (notesStore.notes.length === 0) return;
+  emptyTrashModalOpen.value = true;
+};
 
-  const confirmed = confirm("Permanently delete all items in Trash?");
-  if (!confirmed) return;
-
-  // deleteNote() refreshes the list each time, so removing the first row
-  // repeatedly drains all trashed notes currently available to this user.
-  let guard = 0;
-  while (notesStore.notes.length > 0 && guard < 500) {
-    const id = notesStore.notes[0]?.id;
-    if (!id) break;
-    const ok = await notesStore.deleteNote(id);
-    if (!ok) break;
-    guard += 1;
-  }
+const confirmEmptyTrash = async () => {
+  emptyTrashModalOpen.value = false;
+  await notesStore.emptyTrashAll();
 };
 
 const handleSwipeMoveToTrash = async (id: number) => {

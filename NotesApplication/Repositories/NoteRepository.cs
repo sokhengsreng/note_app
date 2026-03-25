@@ -137,4 +137,11 @@ public class NoteRepository : INoteRepository
         var count = await connection.QuerySingleAsync<int>(query, new { NoteId = noteId, UserId = userId });
         return count > 0;
     }
+
+    public async Task<int> DeleteAllTrashedForUserAsync(int userId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        const string query = "DELETE FROM Notes WHERE UserId = @UserId AND IsDeleted = 1";
+        return await connection.ExecuteAsync(query, new { UserId = userId });
+    }
 }

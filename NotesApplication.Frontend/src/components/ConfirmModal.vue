@@ -44,6 +44,12 @@
   </Teleport>
 </template>
 
+<script lang="ts">
+export default {
+  name: "ConfirmModal",
+};
+</script>
+
 <script setup lang="ts">
 import { watch, onUnmounted } from "vue";
 

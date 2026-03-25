@@ -130,6 +130,19 @@ public class NotesController : ControllerBase
     }
 
     /// <summary>
+    /// Permanently delete all notes currently in trash for the current user.
+    /// </summary>
+    [HttpDelete("trash")]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> EmptyTrash()
+    {
+        var userId = GetUserId();
+        var result = await _noteService.EmptyTrashAsync(userId);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Delete a note
     /// </summary>
     /// <param name="id">Note ID</param>

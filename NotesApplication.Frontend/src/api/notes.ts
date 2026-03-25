@@ -55,4 +55,7 @@ export const noteApi = {
 
   deleteNote: (id: number) =>
     apiClient.delete<ApiResponse<boolean>>(`/notes/${id}`),
+
+  /** Permanently remove every note in trash (single request). */
+  emptyTrash: () => apiClient.delete<ApiResponse<number>>('/notes/trash'),
 }

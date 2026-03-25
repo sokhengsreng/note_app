@@ -292,6 +292,16 @@
     <main class="main-content">
       <router-view />
     </main>
+
+    <ConfirmModal
+      v-model="emptyTrashModalOpen"
+      title="Empty Trash"
+      message="Permanently delete all items in Trash? This cannot be undone."
+      confirm-label="Delete all"
+      cancel-label="Cancel"
+      title-id="empty-trash-modal-fab"
+      @confirm="runEmptyTrashFromModal"
+    />
   </div>
 
   <!-- Unauthenticated: full-screen centered -->
@@ -305,6 +315,7 @@ import { ref, computed, watch } from "vue";
 import { useAuthStore } from "./stores/authStore";
 import { useNotesStore } from "./stores/notesStore";
 import { useRouter, useRoute } from "vue-router";
+import ConfirmModal from "./components/ConfirmModal.vue";
 
 const authStore = useAuthStore();
 const notesStore = useNotesStore();
@@ -312,6 +323,7 @@ const router = useRouter();
 const route = useRoute();
 
 const isSidebarOpen = ref(false);
+const emptyTrashModalOpen = ref(false);
 
 const isTrashView = computed(() => route.path === "/trash");
 const isFavoriteView = computed(() => route.path === "/favorites");
@@ -374,22 +386,16 @@ const handleLogout = () => {
   router.push("/login");
 };
 
-const handleEmptyTrashFromFab = async () => {
+const handleEmptyTrashFromFab = () => {
   if (!isTrashView.value) return;
   if (notesStore.isLoading) return;
   if (notesStore.notes.length === 0) return;
+  emptyTrashModalOpen.value = true;
+};
 
-  const confirmed = confirm("Permanently delete all items in Trash?");
-  if (!confirmed) return;
-
-  let guard = 0;
-  while (notesStore.notes.length > 0 && guard < 500) {
-    const id = notesStore.notes[0]?.id;
-    if (!id) break;
-    const ok = await notesStore.deleteNote(id);
-    if (!ok) break;
-    guard += 1;
-  }
+const runEmptyTrashFromModal = async () => {
+  emptyTrashModalOpen.value = false;
+  await notesStore.emptyTrashAll();
 };
 </script>
 

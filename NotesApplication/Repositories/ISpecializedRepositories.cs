@@ -11,6 +11,7 @@ public interface INoteRepository : IRepository<Note>
         string sortBy = "CreatedAt", bool sortDescending = true, 
         bool? isFavorite = null, bool? isDeleted = null);
     Task<bool> UserOwnsNoteAsync(int noteId, int userId);
+    Task<int> DeleteAllTrashedForUserAsync(int userId);
 }
 
 public interface IUserRepository : IRepository<User>

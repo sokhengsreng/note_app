@@ -168,6 +168,27 @@ export const useNotesStore = defineStore('notes', () => {
     }
   }
 
+  /** Permanently delete all trashed notes in one API call, then refresh the list. */
+  const emptyTrashAll = async () => {
+    isLoading.value = true
+    error.value = ''
+    try {
+      const response = await noteApi.emptyTrash()
+      if (response.data.success) {
+        pagination.value.pageNumber = 1
+        await fetchNotes()
+        return true
+      }
+      error.value = response.data.message
+      return false
+    } catch (err: any) {
+      error.value = err.response?.data?.message || 'Failed to empty trash'
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   return {
     notes,
     currentNote,
@@ -180,6 +201,7 @@ export const useNotesStore = defineStore('notes', () => {
     createNote,
     updateNote,
     deleteNote,
+    emptyTrashAll,
     setPage,
     setSearch,
     setSortBy,

@@ -11,6 +11,7 @@ public interface INoteService
     Task<ApiResponse<PaginatedResponse<NoteResponseDto>>> GetUserNotesAsync(int userId, GetNotesQueryDto query);
     Task<ApiResponse<NoteResponseDto>> UpdateNoteAsync(int userId, int noteId, UpdateNoteDto dto);
     Task<ApiResponse<bool>> DeleteNoteAsync(int userId, int noteId);
+    Task<ApiResponse<int>> EmptyTrashAsync(int userId);
 }
 
 public class NoteService : INoteService
@@ -169,6 +170,19 @@ public class NoteService : INoteService
             Success = result,
             Message = result ? "Note moved to trash" : "Failed to move note to trash",
             Data = result
+        };
+    }
+
+    public async Task<ApiResponse<int>> EmptyTrashAsync(int userId)
+    {
+        var deleted = await _noteRepository.DeleteAllTrashedForUserAsync(userId);
+        return new ApiResponse<int>
+        {
+            Success = true,
+            Message = deleted > 0
+                ? $"Permanently deleted {deleted} note(s) from trash"
+                : "Trash was already empty",
+            Data = deleted
         };
     }
 
