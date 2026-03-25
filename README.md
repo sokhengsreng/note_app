@@ -134,24 +134,34 @@ docker-compose up -d --build
 
 ### GitHub Pages (optional — static frontend demo)
 
-**Wrong asset URLs** (`/assets/...` at the site root while the app lives under `/your-repo/`) or **missing `_plugin-*.js` chunks** make the browser load HTML instead of JS (**wrong MIME type** / **NS_ERROR_CORRUPTED_CONTENT**). Fixes in this repo:
+**Use the URL GitHub shows for *your* repo.** For a normal **project** repository (for example `note_app.github.io` under user `sokhengsreng`), the site is **only** at:
 
-1. **`npm run build:gh-pages`** — uses `--base=./` so script/CSS links are **relative** to the deployed folder.
-2. **`.nojekyll`** — written into `dist/` on build so GitHub Pages **does not run Jekyll** (Jekyll would otherwise omit many files starting with `_`, including Vite’s `_plugin-vue_export-helper-*.js`).
-3. Deploy the **entire** `dist/` output (including the `assets/` folder, `404.html`, and `.nojekyll`), not only `index.html`.
-4. **`404.html`** — copy of `index.html` for client-side routes on refresh.
+`https://sokhengsreng.github.io/note_app.github.io/`
 
-From `NotesApplication.Frontend`:
+Opening **`https://sokhengsreng.github.io/`** (no repository path) is a **different** site. If an `index.html` there references **`/assets/...`**, the browser loads `https://sokhengsreng.github.io/assets/...`, which **does not** exist for your app → **404 HTML as JS** → **wrong MIME type** / **NS_ERROR_CORRUPTED_CONTENT**.
+
+The only exception is the special **user/org** repo named **`YOUR_USERNAME.github.io`**, which is served at `https://YOUR_USERNAME.github.io/`.
+
+**What this repo does:**
+
+- **`.github/workflows/static.yml`** runs `vite build` with **`--base=/REPO_NAME/`** for project repos, or **`--base=/`** when the repository name equals **`YOUR_USERNAME.github.io`** (user site).
+- Every **`vite build`** (including CI) writes **`dist/.nojekyll`** (disables Jekyll so `_plugin-*.js` chunks are published) and **`dist/404.html`** for SPA refresh.
+
+Do **not** mix a full monorepo tree with manually uploaded `index.html` + `assets` at the repo root on a random branch unless that branch is exactly what Pages deploys and paths match; prefer **Actions → upload-pages-artifact** from `NotesApplication.Frontend/dist` only.
+
+Local build matching a **project** site (replace with your repo name):
 
 ```bash
-npm run build:gh-pages
+cd NotesApplication.Frontend
+npm ci
+npm run build -- --base=/note_app.github.io/
 ```
 
-Open the site at the URL GitHub shows for Pages (for a **project** site, usually `https://<user>.github.io/<repo>/`).
+Or use **`npm run build:gh-pages`** (`--base=./`) when you open the site **only** via the correct project URL above (relative asset URLs).
 
-The **`::-ms-check` CSS warning** in Firefox is harmless (legacy vendor pseudo-element inside bundled CSS); it does not break the app.
+The **`::-ms-check` CSS warning** in Firefox is harmless.
 
-The hosted app still needs a reachable API: set `VITE_API_URL` when building (e.g. your public backend `/api` URL), since GitHub Pages cannot proxy to `localhost:5207`.
+The hosted app still needs a reachable API: set `VITE_API_URL` when building, since GitHub Pages cannot proxy to `localhost:5207`.
 
 ## Notes for reviewers
 

@@ -27,9 +27,20 @@ jobs:
         run: npm install
         working-directory: NotesApplication.Frontend
 
+      # Default `vite build` uses base `/`, so the browser requests
+      # https://USER.github.io/assets/... — wrong for *project* sites, which
+      # live at https://USER.github.io/REPO_NAME/ (e.g. note_app.github.io).
+      # User/org site repo USER.github.io must use base `/`.
       - name: Build Vue App
-        run: npm run build
         working-directory: NotesApplication.Frontend
+        run: |
+          REPO="${{ github.event.repository.name }}"
+          OWNER="${{ github.repository_owner }}"
+          if [ "$REPO" = "${OWNER}.github.io" ]; then
+            npm run build -- --base=/
+          else
+            npm run build -- --base=/${REPO}/
+          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
