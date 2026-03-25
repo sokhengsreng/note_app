@@ -83,6 +83,27 @@
           <span v-if="!authStore.isLoading">Sign In</span>
           <div v-else class="spinner"></div>
         </button>
+
+        <template v-if="showDemoLogin">
+          <div class="demo-login-divider">
+            <span>GitHub Pages demo</span>
+          </div>
+          <button
+            type="button"
+            class="btn btn-secondary auth-submit demo-login-btn"
+            :disabled="authStore.isLoading"
+            @click="handleDemoLogin"
+          >
+            Continue as demo (no server)
+          </button>
+          <p class="demo-login-hint">
+            Or sign in with
+            <strong>{{ demoEmail }}</strong>
+            /
+            <strong>{{ demoPassword }}</strong>
+            when the API is available.
+          </p>
+        </template>
       </form>
 
       <p class="auth-switch">
@@ -94,18 +115,30 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from "vue";
+import { reactive, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/authStore";
+import {
+  isDemoLoginEnabled,
+  DEMO_CREDENTIALS,
+} from "../config/demoAuth";
 
 const authStore = useAuthStore();
 const router = useRouter();
 
 const form = reactive({ email: "", password: "" });
+const showDemoLogin = computed(() => isDemoLoginEnabled());
+const demoEmail = DEMO_CREDENTIALS.email;
+const demoPassword = DEMO_CREDENTIALS.password;
 
 const handleLogin = async () => {
   const success = await authStore.login(form.email, form.password);
   if (success) router.push("/notes");
+};
+
+const handleDemoLogin = () => {
+  authStore.loginWithDemoUser();
+  router.push("/notes");
 };
 </script>
 
@@ -190,6 +223,51 @@ const handleLogin = async () => {
   width: 100%;
   margin-top: 4px;
   padding: 11px 18px;
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: #111111;
+  border: 1px solid #111111;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #f4f4f5;
+}
+
+.demo-login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 10px;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.demo-login-divider::before,
+.demo-login-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.demo-login-btn {
+  margin-top: 0;
+}
+
+.demo-login-hint {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #6b7280;
+  text-align: center;
+}
+
+.demo-login-hint strong {
+  color: #374151;
 }
 
 .auth-switch {

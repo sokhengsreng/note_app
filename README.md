@@ -163,6 +163,8 @@ The **`::-ms-check` CSS warning** in Firefox is harmless.
 
 The hosted app still needs a reachable API: set `VITE_API_URL` when building, since GitHub Pages cannot proxy to `localhost:5207`.
 
+**Static demo login:** On **`*.github.io`** (production), the sign-in page offers **Continue as demo (no server)**—no API call. You can also use **`demo@notes.local`** / **`demo`** in the form (works locally too). Notes CRUD still needs a real backend JWT unless you only need the UI shell.
+
 ## Notes for reviewers
 
 - The app uses soft-delete (`IsDeleted`) for trash behavior.
