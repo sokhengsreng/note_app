@@ -132,6 +132,22 @@ Then start the stack:
 docker-compose up -d --build
 ```
 
+### GitHub Pages (optional — static frontend demo)
+
+Project sites are served at `https://<user>.github.io/<repo>/`, not at the domain root. The frontend must be built with that **base path**, or scripts and CSS are requested from the wrong URL (`/assets/...`), which returns HTML (404 page) and the browser reports **wrong MIME type** / **NS_ERROR_CORRUPTED_CONTENT**.
+
+From `NotesApplication.Frontend`:
+
+```bash
+npm run build:gh-pages
+```
+
+Deploy the contents of `dist/` to the `gh-pages` branch (or GitHub Actions “Pages” artifact). If the repository is not named `note_app`, change `--base=/note_app/` in `package.json` to match your repo name (trailing slash required).
+
+Direct visits to routes like `/note_app/trash` need GitHub to fall back to the SPA: the build copies `index.html` to `404.html` for that purpose.
+
+The hosted app still needs a reachable API: set `VITE_API_URL` when building (e.g. your public backend `/api` URL), since GitHub Pages cannot proxy to `localhost:5207`.
+
 ## Notes for reviewers
 
 - The app uses soft-delete (`IsDeleted`) for trash behavior.
