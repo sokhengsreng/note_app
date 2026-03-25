@@ -1,7 +1,10 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
-import { copyFileSync, existsSync } from 'node:fs'
+import { fileURLToPath } from 'url'
+import { copyFileSync, existsSync } from 'fs'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 /**
  * GitHub *Project* Pages serves the site at https://USER.github.io/REPO_NAME/
