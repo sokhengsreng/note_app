@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # SQL Server Database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: notes-sqlserver
+    environment:
+      SA_PASSWORD: "YourSuperSecurePassword123!"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql/data
+      - sqlserver_log:/var/opt/mssql/log
+      - sqlserver_backup:/var/opt/mssql/backup
+      - ./NotesApplication/Database/InitializeDatabase.sql:/docker-entrypoint-initdb.d/01-init.sql
+    networks:
+      - notes-network
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "YourSuperSecurePassword123!", "-Q", "SELECT 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: NotesApplication/Dockerfile
+    container_name: notes-backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:5000
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=NotesDb;User Id=sa;Password=YourSuperSecurePassword123!;TrustServerCertificate=true;"
+      JwtSettings__SecretKey: "your-super-secret-key-change-in-production-now-seriously-change-this"
+      JwtSettings__ExpirationMinutes: "60"
+      CORS_ALLOWED_ORIGINS: "http://localhost,http://frontend:80"
+    ports:
+      - "5000:5000"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - notes-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # Frontend Web Application
+  frontend:
+    build:
+      context: .
+      dockerfile: NotesApplication.Frontend/Dockerfile
+    container_name: notes-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - notes-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  sqlserver_data:
+  sqlserver_log:
+  sqlserver_backup:
+
+networks:
+  notes-network:
+    driver: bridge

@@ -1,0 +1,24 @@
+# .NET
+**/bin/
+**/obj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.docstates
+
+# Node / Vue
+**/node_modules/
+**/dist/
+*.log
+
+# Secrets & local config
+**/appsettings.Development.json
+**/appsettings.Production.json
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db

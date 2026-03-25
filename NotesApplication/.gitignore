@@ -1,0 +1,13 @@
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.docstates
+.DS_Store
+appsettings.Development.json
+appsettings.Production.json
+.env
+.env.*
+!.env.example
