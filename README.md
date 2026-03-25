@@ -134,7 +134,12 @@ docker-compose up -d --build
 
 ### GitHub Pages (optional — static frontend demo)
 
-Project sites are served at `https://<user>.github.io/<repo>/`, not at the domain root. The frontend must be built with that **base path**, or scripts and CSS are requested from the wrong URL (`/assets/...`), which returns HTML (404 page) and the browser reports **wrong MIME type** / **NS_ERROR_CORRUPTED_CONTENT**.
+**Wrong asset URLs** (`/assets/...` at the site root while the app lives under `/your-repo/`) or **missing `_plugin-*.js` chunks** make the browser load HTML instead of JS (**wrong MIME type** / **NS_ERROR_CORRUPTED_CONTENT**). Fixes in this repo:
+
+1. **`npm run build:gh-pages`** — uses `--base=./` so script/CSS links are **relative** to the deployed folder.
+2. **`.nojekyll`** — written into `dist/` on build so GitHub Pages **does not run Jekyll** (Jekyll would otherwise omit many files starting with `_`, including Vite’s `_plugin-vue_export-helper-*.js`).
+3. Deploy the **entire** `dist/` output (including the `assets/` folder, `404.html`, and `.nojekyll`), not only `index.html`.
+4. **`404.html`** — copy of `index.html` for client-side routes on refresh.
 
 From `NotesApplication.Frontend`:
 
@@ -142,9 +147,9 @@ From `NotesApplication.Frontend`:
 npm run build:gh-pages
 ```
 
-Deploy the contents of `dist/` to the `gh-pages` branch (or GitHub Actions “Pages” artifact). If the repository is not named `note_app`, change `--base=/note_app/` in `package.json` to match your repo name (trailing slash required).
+Open the site at the URL GitHub shows for Pages (for a **project** site, usually `https://<user>.github.io/<repo>/`).
 
-Direct visits to routes like `/note_app/trash` need GitHub to fall back to the SPA: the build copies `index.html` to `404.html` for that purpose.
+The **`::-ms-check` CSS warning** in Firefox is harmless (legacy vendor pseudo-element inside bundled CSS); it does not break the app.
 
 The hosted app still needs a reachable API: set `VITE_API_URL` when building (e.g. your public backend `/api` URL), since GitHub Pages cannot proxy to `localhost:5207`.
 

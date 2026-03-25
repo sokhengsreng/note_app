@@ -2,15 +2,16 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { copyFileSync, existsSync } from 'fs'
+import { copyFileSync, existsSync, writeFileSync } from 'fs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 /**
- * GitHub *Project* Pages serves the site at https://USER.github.io/REPO_NAME/
- * You must build with the correct base or assets load from the wrong URL
- * (e.g. /assets/... → 404, browser gets HTML → "wrong MIME type" for .js).
- * Use: npm run build:gh-pages (repo name must match base path).
+ * GitHub Pages / static hosting:
+ * - `build:gh-pages` uses `--base=./` so asset URLs are relative (correct under
+ *   `https://USER.github.io/REPO/` or a user-site root).
+ * - GitHub Pages runs Jekyll by default and skips most `_`-prefixed paths; Vite
+ *   emits chunks like `_plugin-*.js`. We write `.nojekyll` in dist to disable Jekyll.
  */
 export default defineConfig({
   plugins: [
@@ -22,6 +23,7 @@ export default defineConfig({
         const indexHtml = path.join(dist, 'index.html')
         if (existsSync(indexHtml)) {
           copyFileSync(indexHtml, path.join(dist, '404.html'))
+          writeFileSync(path.join(dist, '.nojekyll'), '')
         }
       },
     },
