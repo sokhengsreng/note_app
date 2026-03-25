@@ -41,7 +41,7 @@ This project supports note CRUD, search, sorting/filtering, auth, and per-user n
 - `NotesApplication/` - backend API
 - `NotesApplication.Frontend/` - Vue frontend
 - `NotesApplication.Tests/` - unit tests
-- `docker-compose.yml` - optional containerized setup
+- `docker-compose.yml` - **optional** container stack for deployment-style runs (not required for local dev)
 
 ## Quick start
 
@@ -49,7 +49,28 @@ For fastest setup, read `QUICKSTART.md`.
 
 ## Local development
 
-### 1) Backend
+**Prerequisites**
+
+- **.NET SDK** matching the project (see `NotesApplication/NotesApplication.csproj`, currently **net10.0**)
+- **Node.js** + **npm** (for the frontend)
+- **SQL Server** reachable using `ConnectionStrings:DefaultConnection` in `NotesApplication/appsettings.json` (default: Windows auth to the local instance `.`)
+
+### 1) Database (local SQL Server) — do this first on a new machine
+
+The API uses **Dapper**, not Entity Framework—there are **no** `dotnet ef` migrations. Create the database and tables from the SQL script:
+
+- **Script:** `NotesApplication/Database/InitializeDatabase.sql` (creates `NotesDb` and tables such as `Users`, `Notes`)
+- **Run it once** against the same server as in `appsettings.json` (SQL Server Management Studio, Azure Data Studio, or `sqlcmd`).
+
+Until `NotesDb` and the schema exist, **auth and note endpoints will fail** even though `dotnet run` and `/health` succeed.
+
+**Example** (repository root, Windows integrated security, local default instance, matches typical `Trusted_Connection` + `TrustServerCertificate` setups):
+
+```bash
+sqlcmd -S . -E -C -i NotesApplication/Database/InitializeDatabase.sql
+```
+
+### 2) Backend
 
 ```bash
 cd NotesApplication
@@ -65,18 +86,7 @@ In development, built-in OpenAPI is available via:
 
 - `/openapi/v1.json`
 
-### Database (local SQL Server)
-
-The API uses **Dapper**, not Entity Framework—there are **no** `dotnet ef` migrations. The schema is created from a SQL script:
-
-- **Script:** `NotesApplication/Database/InitializeDatabase.sql` (creates `NotesDb` and tables such as `Users`, `Notes`)
-- **Run it once** against the same server as `ConnectionStrings:DefaultConnection` in `NotesApplication/appsettings.json` (for example with SQL Server Management Studio, Azure Data Studio, or `sqlcmd`).
-
-Until that database and schema exist, auth and note endpoints will fail at runtime even though `dotnet run` and `/health` succeed.
-
-With **Docker Compose**, the backend gets its connection string from `docker-compose.yml`; you may still need to apply `InitializeDatabase.sql` manually against the SQL Server container if it does not run automatically in your environment.
-
-### 2) Frontend
+### 3) Frontend
 
 ```bash
 cd NotesApplication.Frontend
@@ -88,15 +98,38 @@ Frontend dev server usually runs on:
 
 - `http://localhost:5173`
 
-Frontend API target should be:
+Frontend API base URL:
 
-- `VITE_API_URL=/api` (default in `.env.example`)
+- `VITE_API_URL=/api` (default in `.env.example`; Vite proxies `/api` to the backend in dev)
 
-### 3) Tests
+### 4) Tests
 
 ```bash
 cd NotesApplication.Tests
 dotnet test
+```
+
+### Troubleshooting
+
+- **Address already in use (5207 or 5173):** Another process is using the API or Vite port. Stop that process, or change the URL in `NotesApplication/Properties/launchSettings.json` and `NotesApplication.Frontend/vite.config.ts` (and keep the Vite proxy target aligned with where the API listens).
+
+### Docker (optional — deployment / container trial)
+
+**Local development is intended to use .NET + Node + SQL Server on the host**, as above. `docker-compose.yml` is optional when you want a containerized stack (e.g. closer to deployment).
+
+The official **SQL Server on Linux** image does **not** run scripts from `docker-entrypoint-initdb.d` (that pattern is PostgreSQL-style). After the `sqlserver` container is healthy, apply the schema yourself, for example:
+
+```bash
+docker cp NotesApplication/Database/InitializeDatabase.sql notes-sqlserver:/tmp/init.sql
+docker exec notes-sqlserver /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourSuperSecurePassword123!" -C -i /tmp/init.sql
+```
+
+(Adjust the `sqlcmd` path if your image uses `mssql-tools18` or a different layout; password must match `SA_PASSWORD` in `docker-compose.yml`.)
+
+Then start the stack:
+
+```bash
+docker-compose up -d --build
 ```
 
 ## Notes for reviewers

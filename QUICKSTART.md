@@ -2,9 +2,19 @@
 
 Use this file if you just want to run the app quickly.
 
-## Option A: Local run (recommended for development)
+## Local run (recommended)
 
-### Backend
+### 1) Database (once per machine / fresh SQL instance)
+
+From the **repository root**:
+
+```bash
+sqlcmd -S . -E -C -i NotesApplication/Database/InitializeDatabase.sql
+```
+
+Use the same SQL Server as `ConnectionStrings:DefaultConnection` in `NotesApplication/appsettings.json`. If you use SSMS or Azure Data Studio instead, run `NotesApplication/Database/InitializeDatabase.sql` there.
+
+### 2) Backend
 
 ```bash
 cd NotesApplication
@@ -12,7 +22,7 @@ dotnet restore
 dotnet run
 ```
 
-### Frontend
+### 3) Frontend
 
 ```bash
 cd NotesApplication.Frontend
@@ -20,15 +30,17 @@ npm install
 npm run dev
 ```
 
-Then open the frontend URL shown by Vite (usually `http://localhost:5173`).
+Then open the URL Vite prints (usually `http://localhost:5173`).
 
-## Option B: Docker Compose
+---
+
+## Docker (optional, later)
+
+Use `docker-compose` when you want a **container** deployment-style setup—not required for normal local dev. See **“Docker (optional)”** in `README.md` for schema setup (SQL Server does not auto-run the init script; you run `InitializeDatabase.sql` against the container after it is up).
 
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
-
-If your compose file is configured for this environment, it will start frontend/backend/db together.
 
 ## Verify quickly
 
@@ -43,4 +55,3 @@ If your compose file is configured for this environment, it will start frontend/
 Built-in OpenAPI JSON endpoint:
 
 - `/openapi/v1.json`
-

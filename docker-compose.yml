@@ -1,3 +1,7 @@
+# Optional stack for deployment-style runs. Local dev: use README "Local development"
+# instead. After sqlserver is up, apply NotesApplication/Database/InitializeDatabase.sql
+# manually (see README — the SQL Server image does not auto-run docker-entrypoint-initdb.d).
+
 version: '3.8'
 
 services:
@@ -15,7 +19,6 @@ services:
       - sqlserver_data:/var/opt/mssql/data
       - sqlserver_log:/var/opt/mssql/log
       - sqlserver_backup:/var/opt/mssql/backup
-      - ./NotesApplication/Database/InitializeDatabase.sql:/docker-entrypoint-initdb.d/01-init.sql
     networks:
       - notes-network
     healthcheck:
@@ -37,7 +40,6 @@ services:
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=NotesDb;User Id=sa;Password=YourSuperSecurePassword123!;TrustServerCertificate=true;"
       JwtSettings__SecretKey: "your-super-secret-key-change-in-production-now-seriously-change-this"
       JwtSettings__ExpirationMinutes: "60"
-      CORS_ALLOWED_ORIGINS: "http://localhost,http://frontend:80"
     ports:
       - "5000:5000"
     depends_on:
