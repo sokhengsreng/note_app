@@ -582,6 +582,15 @@
       title-id="empty-trash-modal-header"
       @confirm="confirmEmptyTrash"
     />
+    <ConfirmModal
+      v-model="deleteOneTrashModalOpen"
+      title="Delete note"
+      message="Permanently delete this note? This cannot be undone."
+      confirm-label="Delete"
+      cancel-label="Cancel"
+      title-id="delete-one-trash-modal-header"
+      @confirm="confirmDeleteOneFromTrash"
+    />
   </div>
 </template>
 
@@ -595,6 +604,8 @@ const route = useRoute();
 const router = useRouter(); // Initialized useRouter
 const notesStore = useNotesStore();
 const emptyTrashModalOpen = ref(false);
+const deleteOneTrashModalOpen = ref(false);
+const noteIdPendingPermanentDelete = ref<number | null>(null);
 const searchQuery = ref("");
 const swipeOffsetById = ref<Record<number, number>>({});
 const activeSwipe = ref<{ id: number; startX: number; startY: number } | null>(
@@ -999,8 +1010,16 @@ const handleMoveToTrash = async (id: number) => {
   await notesStore.deleteNote(id);
 };
 
-const handleDeletePermanently = async (id: number) => {
-  if (confirm("Permanently delete this note?")) {
+const handleDeletePermanently = (id: number) => {
+  noteIdPendingPermanentDelete.value = id;
+  deleteOneTrashModalOpen.value = true;
+};
+
+const confirmDeleteOneFromTrash = async () => {
+  const id = noteIdPendingPermanentDelete.value;
+  deleteOneTrashModalOpen.value = false;
+  noteIdPendingPermanentDelete.value = null;
+  if (id != null) {
     await notesStore.deleteNote(id);
   }
 };

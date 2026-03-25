@@ -160,7 +160,19 @@ public class NoteService : INoteService
             };
         }
 
-        // Soft delete: set IsDeleted to true
+        // Already in trash: DELETE removes the row permanently
+        if (note.IsDeleted)
+        {
+            var deleted = await _noteRepository.DeleteAsync(noteId);
+            return new ApiResponse<bool>
+            {
+                Success = deleted,
+                Message = deleted ? "Note permanently deleted" : "Failed to permanently delete note",
+                Data = deleted
+            };
+        }
+
+        // Active note: soft delete (move to trash)
         note.IsDeleted = true;
         note.UpdatedAt = DateTime.UtcNow;
         var result = await _noteRepository.UpdateAsync(note);

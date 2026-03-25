@@ -138,6 +138,36 @@ public class NoteServiceTests
         Assert.True(result.Success);
         Assert.Equal("Note moved to trash", result.Message);
         Assert.True(result.Data);
+        _mockNoteRepository.Verify(r => r.DeleteAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteNoteAsync_WhenAlreadyInTrash_ShouldPermanentlyDelete()
+    {
+        var userId = 1;
+        var noteId = 1;
+        var trashedNote = new Note
+        {
+            Id = noteId,
+            UserId = userId,
+            Title = "Old",
+            Content = "Old",
+            CreatedAt = DateTime.UtcNow,
+            IsDeleted = true
+        };
+
+        _mockNoteRepository.Setup(r => r.GetNoteByIdForUserAsync(noteId, userId))
+            .ReturnsAsync(trashedNote);
+        _mockNoteRepository.Setup(r => r.DeleteAsync(noteId))
+            .ReturnsAsync(true);
+
+        var result = await _noteService.DeleteNoteAsync(userId, noteId);
+
+        Assert.True(result.Success);
+        Assert.Equal("Note permanently deleted", result.Message);
+        Assert.True(result.Data);
+        _mockNoteRepository.Verify(r => r.DeleteAsync(noteId), Times.Once);
+        _mockNoteRepository.Verify(r => r.UpdateAsync(It.IsAny<Note>()), Times.Never);
     }
 
     [Fact]
