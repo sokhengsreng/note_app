@@ -1,4 +1,4 @@
-name: Deploy Vue Frontend to Pages
+name: Build and Deploy Vue Frontend
 
 on:
   push:
@@ -10,48 +10,36 @@ permissions:
   pages: write
   id-token: write
 
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
-  build:
+  build_and_deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
-          cache-dependency-path: NotesApplication.Frontend/package-lock.json
 
-      - name: Install dependencies
+      - name: Install Dependencies
+        # We must tell it where your package.json is!
         run: npm install
         working-directory: NotesApplication.Frontend
 
-      - name: Build project
+      - name: Build Vue App
         run: npm run build
         working-directory: NotesApplication.Frontend
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload artifact
+      - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # This points to the production build output folder
+          # This points to the folder created by 'npm run build'
           path: './NotesApplication.Frontend/dist'
 
-  deploy:
-    needs: build
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
