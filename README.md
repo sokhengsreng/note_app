@@ -65,6 +65,17 @@ In development, built-in OpenAPI is available via:
 
 - `/openapi/v1.json`
 
+### Database (local SQL Server)
+
+The API uses **Dapper**, not Entity Framework—there are **no** `dotnet ef` migrations. The schema is created from a SQL script:
+
+- **Script:** `NotesApplication/Database/InitializeDatabase.sql` (creates `NotesDb` and tables such as `Users`, `Notes`)
+- **Run it once** against the same server as `ConnectionStrings:DefaultConnection` in `NotesApplication/appsettings.json` (for example with SQL Server Management Studio, Azure Data Studio, or `sqlcmd`).
+
+Until that database and schema exist, auth and note endpoints will fail at runtime even though `dotnet run` and `/health` succeed.
+
+With **Docker Compose**, the backend gets its connection string from `docker-compose.yml`; you may still need to apply `InitializeDatabase.sql` manually against the SQL Server container if it does not run automatically in your environment.
+
 ### 2) Frontend
 
 ```bash
